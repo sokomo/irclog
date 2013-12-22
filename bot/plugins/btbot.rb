@@ -7,9 +7,9 @@
 class Btbot
   include Cinch::Plugin
 
-  set :help => "Play Bet game with the bot. To start the game, type `!btbot <number> [<score>] [<ratio>]`, where `<number>` is a number in the range from 0 to 1000. The bot will randomly choose a random betting number and random midle number to find the winner. The rule is: The number is most near to the midle number is the winner. The winner will get/lost a random number of nutshells (5, 10 or 15) multiply with the ratio. You can also give a bet number, and ratio, for example `!btbot 400 50 2`. The score should not excess 200 and ratio should not excess 5."
+  set :help => "Play Bet game with the bot. To start the game, type `!btbot <number> [<score>] [<ratio>]`, where `<number>` is a number in the range from 0 to 1000, `<score>` is the nutshell(s) you want to bet, and <ratio> is the multiply number with the score. The bot will randomly choose a random betting number and random middle number to find the winner. The rule is: The number is most near to the midle number is the winner. The winner will get/lost a random number of nutshells (5, 10 or 15) multiply with the ratio. You can also give a bet number, and ratio, for example `!btbot 400 50 2`. The score should not excess 200 and ratio should not excess 5."
 
-  match /btbot ([^[:space:]]+) ([[:space:]]+[0-9]+) ([[:space:]]+[0-9]+)?\b/,  :method => :btbot_play
+  match /btbot ([^[:space:]]+[0-9]+)([[:space:]]+[0-9]+)?([[:space:]]+[0-9]+)?\b/,  :method => :btbot_play
 
   def btbot_play(m, betnumber, mscore, ratio)
     return unless _cache_expired?(:btbot, "#{m.user.nick}", :cache_time => 10)
@@ -51,7 +51,7 @@ class Btbot
     Btbot::_win?(diff_bot_num - diff_user_num, mscore, ratio)
     
     bot_nutshell_give!(:masterbank, m.user.nick, nutshell, :allow_doubt => true, :reason => "btbot_play")
-    m.reply "#{m.user.nick}: #{ret}. Got #{nutshell}. Now have #{bot_score!(m.user.nick, 0)} nutshell(s)"
+    m.reply "#{m.user.nick}: Bot's random number is: #{bot_number}. Bot's random middle number is: #{bot_mid_number}. #{ret}. Got #{nutshell}. Now have #{bot_score!(m.user.nick, 0)} nutshell(s)"
   end
 
   class << self
@@ -60,7 +60,7 @@ class Btbot
     # Score < 0: Loose, get a negative number of nutshells (up to 2)
     # Mscore: nil or the amount that user bet
     def _win?(score, mscore = nil, multiply = nil)
-      mscore = 5 * (1+rand(3)) if not mscore or mscore == 0
+      mscore = 5 * (1 + rand(3)) if not mscore or mscore == 0
       multiply = 1 if not multiply or multiply == 0
       mscore = mscore * multiply
       if score > 0
